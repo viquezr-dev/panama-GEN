@@ -324,7 +324,7 @@ function seleccionar(lat, lng, forcedZonaID = null) {
             <a href="https://wa.me/?text=Mi+${tituloPopup.replace(' ', '+')}+es:+${codigoFinal.split('<br>')[0]}" target="_blank" class="btn-ws">💬 WS</a>
             <button onclick="buscarEstafetaCercana(${lat}, ${lng})" class="btn-cercana">📍 ESTAFETA CERCANA</button>
         </div>
-      `, { offset: L.point(0, -25), minWidth: 160 })
+      `, { offset: L.point(0, -25), minWidth: 160,  maxWidth: 160, autoPanPadding: L.point(20, 20) })
        .openPopup();
 
     pin.on('popupclose', () => { selectionLayer.clearLayers(); });
@@ -428,6 +428,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
