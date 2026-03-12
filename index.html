@@ -150,15 +150,33 @@ const PARAMS = {
 };
 
 // --- INICIALIZACIÓN MAPA ---
+// --- CONFIGURACIÓN DE MAPAS BASE ---
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+});
+
+const satelital = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+    attribution: '© Google Satellite'
+});
+ 
 const map = L.map('map', { zoomControl: false }).setView([8.98, -79.52], 12);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
 }).addTo(map);
+const baseMaps = {
+    "Satélite": satelital,
+    "Calles (OSM)": osm
+};
 
 let layerZonas = L.geoJSON(null, {
-    style: { color: "#1a2a6c", weight: 1, fillOpacity: 0.1, fillColor: "#3498db" }
+    style: { 
+        color: "#f1c40f", // Cambié a amarillo para que resalte mejor sobre el satélite
+        weight: 2, 
+        fillOpacity: 0.1, 
+        fillColor: "#f1c40f" 
+    }
 }).addTo(map);
 
 // Marcador para el punto seleccionado
@@ -282,3 +300,4 @@ map.on('click', procesarClic);
 </script>
 </body>
 </html>
+
