@@ -3,41 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTEMA POSTAL PANAMÁ - Generador de Código</title>
+    <title>SISTEMA POSTAL PANAMÁ - Visor Cartográfico COTEL</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --primary: #1a2a6c;
-            --accent: #f1c40f;
-            --bg: #f1f5f9;
+            --primary: #0f172a;
+            --accent: #00f2ff; /* Cian brillante para mejor contraste */
+            --bg: #f8fafc;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; }
         
-        .main-layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+        .main-layout { display: flex; height: 100vh; width: 100vw; }
 
         /* Panel Lateral */
         .info-panel {
-            width: 400px;
+            width: 380px;
             background: white;
-            box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
         }
 
-        /* Mapa */
-        #map { flex-grow: 1; height: 100%; }
+        /* Contenedor del Mapa */
+        #map { flex-grow: 1; height: 100%; background: #ddd; }
 
-        h2 { color: var(--primary); font-size: 1.2rem; text-align: center; margin-bottom: 20px; text-transform: uppercase; }
+        h2 { color: var(--primary); font-size: 1.1rem; text-align: center; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
 
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group { margin-bottom: 18px; }
+        label { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; margin-bottom: 6px; text-transform: uppercase; }
         
         input {
             width: 100%;
@@ -45,31 +45,33 @@
             border: 2px solid #e2e8f0;
             border-radius: 8px;
             box-sizing: border-box;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-family: 'JetBrains Mono', monospace;
-            background: #f8fafc;
+            background: #fdfdfd;
+            color: #1e293b;
         }
 
-        .coords-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .coords-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .result-box {
-            margin-top: 25px;
-            padding: 20px;
+            margin-top: 20px;
+            padding: 25px;
             background: var(--primary);
             color: white;
             border-radius: 12px;
             text-align: center;
-            border: 3px solid var(--accent);
+            border-left: 5px solid var(--accent);
         }
 
         #postal-code {
             display: block;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 900;
-            margin-top: 10px;
-            letter-spacing: 2px;
+            margin-top: 8px;
+            letter-spacing: 3px;
             color: var(--accent);
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
         }
 
         .footer {
@@ -77,45 +79,46 @@
             text-align: center;
             font-size: 0.7rem;
             color: #94a3b8;
-            padding-top: 20px;
+            padding-top: 25px;
+            line-height: 1.4;
         }
 
-        /* Estilos del Popup */
-        .leaflet-popup-content-wrapper { border-radius: 8px; font-size: 12px; }
-        .popup-title { font-weight: bold; color: var(--primary); border-bottom: 1px solid #ddd; margin-bottom: 5px; display: block; }
+        /* Estilos del Mapa y Capas */
+        .leaflet-control-layers { border-radius: 8px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; padding: 6px !important; }
     </style>
 </head>
 <body>
 
 <div class="main-layout">
     <div class="info-panel">
-        <h2>Generador Postal</h2>
+        <h2>Visor de Metadatos</h2>
         
         <div class="input-group">
-            <label>Zona Postal (VM_LEVEL)</label>
-            <input type="text" id="vmLevel" placeholder="Clic en el mapa..." readonly>
+            <label>Zona Seleccionada (VM_LEVEL)</label>
+            <input type="text" id="vmLevel" placeholder="Haga clic en el mapa..." readonly>
         </div>
 
         <div class="coords-grid">
             <div class="input-group">
-                <label>Latitud</label>
+                <label>Latitud (WGS84)</label>
                 <input type="text" id="lat" readonly>
             </div>
             <div class="input-group">
-                <label>Longitud</label>
+                <label>Longitud (WGS84)</label>
                 <input type="text" id="lng" readonly>
             </div>
         </div>
 
         <div class="result-box">
-            <label style="color: rgba(255,255,255,0.7)">CÓDIGO POSTAL RESULTANTE</label>
+            <label style="color: #94a3b8; letter-spacing: 1px;">CÓDIGO POSTAL GENERADO</label>
             <span id="postal-code">---</span>
-            <div id="extra-info" style="font-size: 0.8rem; margin-top: 10px; color: #cbd5e1;"></div>
+            <div id="extra-info" style="font-size: 0.85rem; margin-top: 15px; color: #cbd5e1; line-height: 1.5;"></div>
         </div>
 
         <div class="footer">
-            Propiedad Intelectual: Raúl Víquez<br>
-            COTEL Panamá - 2026
+            <strong>Raúl Víquez</strong> - Cartografía Digital<br>
+            Dirección General de Correos y Telégrafos<br>
+            © COTEL Panamá 2026
         </div>
     </div>
 
@@ -143,52 +146,54 @@ const TABLA_BUSQUEDA = {
 // --- CONSTANTES LÓGICA VÍQUEZ ---
 const ORIGIN = { lat: 10.0, lng: -83.0 };
 const PARAMS = {
-    RES_MACRO: 0.143, 
     RES_PICO: ((0.143/24)/25)/8, 
     ALFA: "23456789ABCDEFGHJKLMNPQRSTVWXZ", 
     MACRO_X_COUNT: 42
 };
 
-// --- INICIALIZACIÓN MAPA ---
 // --- CONFIGURACIÓN DE MAPAS BASE ---
-const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
+const mapaCalles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20, attribution: '© OpenStreetMap'
 });
 
-const satelital = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-    attribution: '© Google Satellite'
+const mapaSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20, attribution: '© Google Satellite'
 });
- 
-const map = L.map('map', { zoomControl: false }).setView([8.98, -79.52], 12);
+
+// --- INICIALIZACIÓN MAPA ---
+const map = L.map('map', { 
+    zoomControl: false,
+    layers: [mapaSatelite] // Satelital por defecto
+}).setView([8.98, -79.52], 12);
+
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-}).addTo(map);
-const baseMaps = {
-    "Satélite": satelital,
-    "Calles (OSM)": osm
+// Control selector de mapas
+const baseLayers = {
+    "Vista Satelital": mapaSatelite,
+    "Mapa de Calles": mapaCalles
 };
+L.control.layers(baseLayers, null, { collapsed: false, position: 'topright' }).addTo(map);
 
+// Capa para los polígonos GeoJSON
 let layerZonas = L.geoJSON(null, {
     style: { 
-        color: "#f1c40f", // Cambié a amarillo para que resalte mejor sobre el satélite
-        weight: 2, 
+        color: "#00f2ff", // Cian para alta visibilidad
+        weight: 1.5, 
         fillOpacity: 0.1, 
-        fillColor: "#f1c40f" 
+        fillColor: "#00f2ff" 
     }
 }).addTo(map);
 
-// Marcador para el punto seleccionado
 let selectionMarker = L.layerGroup().addTo(map);
 
 // --- CARGA DE DATOS ---
 fetch('estafetas.geojson')
     .then(r => r.json())
     .then(data => layerZonas.addData(data))
-    .catch(e => console.error("Error cargando polígonos:", e));
+    .catch(e => alert("Error: No se encontró el archivo estafetas.geojson en la carpeta local."));
 
-// --- FUNCIONES CORE ---
+// --- FUNCIONES DE CÁLCULO ---
 
 function encodeJS(num, len) {
     let s = ""; let n = Math.abs(Math.floor(num));
@@ -219,7 +224,6 @@ function getGridInfo(lat, lng) {
     };
 }
 
-// Función para detectar si un punto está dentro de un polígono (Ray Casting)
 function pointInPolygon(point, vs) {
     let x = point[0], y = point[1];
     let inside = false;
@@ -252,25 +256,20 @@ function identificarZona(latlng) {
 function procesarClic(e) {
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
-    
-    // 1. Identificar zona en el GeoJSON
     const props = identificarZona(e.latlng);
     
-    if (!props) {
-        alert("Punto fuera de las zonas postales.");
-        return;
-    }
+    if (!props) return;
 
-    // 2. Actualizar Interfaz
+    // Actualizar Textbox
     const vmName = props.VM_LEVEL || "DESCONOCIDO";
     document.getElementById('vmLevel').value = vmName;
     document.getElementById('lat').value = lat.toFixed(6);
     document.getElementById('lng').value = lng.toFixed(6);
 
-    // 3. Obtener prefijo de 2 dígitos (VLookup)
+    // VLookup del prefijo
     const zonaID = props.VM_LEVEL2D || TABLA_BUSQUEDA[vmName] || "XX";
 
-    // 4. Snap to Grid & Cálculo Postal
+    // Cálculo Snap-to-Grid
     const step = PARAMS.RES_PICO;
     const xGrid = Math.floor(((lng - ORIGIN.lng) / step) + 0.00001);
     const yGrid = Math.floor(((ORIGIN.lat - lat) / step) + 0.00001);
@@ -281,23 +280,23 @@ function procesarClic(e) {
     const fullCode = zonaID + res.macro + res.micro + res.nano + res.pico;
     const formattedCode = fullCode.substring(0, 5) + "-" + fullCode.substring(5);
 
-    // 5. Mostrar Resultados
+    // Interfaz
     document.getElementById('postal-code').innerText = formattedCode;
     document.getElementById('extra-info').innerHTML = `
-        Estafeta: ${props.ESTAF_NAME || 'N/A'}<br>
-        Provincia: ${props.PROV_NOMB || 'N/A'}
+        <strong>Estafeta:</strong> ${props.ESTAF_NAME || 'POR DEFINIR'}<br>
+        <strong>Provincia:</strong> ${props.PROV_NOMB || 'PANAMÁ'}
     `;
 
-    // 6. Marcador visual
+    // Marcador
     selectionMarker.clearLayers();
-    L.marker([centerLat, centerLng]).addTo(selectionMarker)
-        .bindPopup(`<b>${formattedCode}</b><br>${vmName}`).openPopup();
+    L.circleMarker([centerLat, centerLng], {
+        radius: 8, fillColor: "#00f2ff", color: "#fff", weight: 3, fillOpacity: 1
+    }).addTo(selectionMarker)
+    .bindPopup(`<b>${formattedCode}</b><br>${vmName}`).openPopup();
 }
 
-// Evento de clic
 map.on('click', procesarClic);
 
 </script>
 </body>
 </html>
-
