@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Código Postal de Panamá</title>
+    <title>Generador de Código Postal de Panamá - Mapa Interactivo</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
     <style>
         :root {
             --primary: #2563eb;
@@ -18,20 +22,46 @@
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text);
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
         }
 
-        .container {
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh; /* Ocupa casi todo el alto de la ventana */
+        }
+
+        .panel {
             background: var(--card);
-            padding: 2rem;
             border-radius: 16px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-panel {
+            flex: 2; /* El mapa ocupa más espacio */
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
             width: 100%;
-            max-width: 450px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-panel {
+            flex: 1; /* El panel de info ocupa menos espacio */
+            overflow-y: auto; /* Permite scroll si el contenido es mucho */
         }
 
         h2 { margin-top: 0; color: var(--primary); font-weight: 600; text-align: center; }
@@ -60,7 +90,6 @@
 
         button {
             width: 100%;
-            background: var(--primary);
             color: white;
             border: none;
             padding: 14px;
@@ -72,7 +101,11 @@
             margin-top: 10px;
         }
 
-        button:hover { background: #1d4ed8; }
+        .btn-map { background: #64748b; }
+        .btn-map:hover { background: #475569; }
+
+        .btn-calc { background: var(--primary); }
+        .btn-calc:hover { background: #1d4ed8; }
 
         .result-box {
             margin-top: 1.5rem;
@@ -81,6 +114,7 @@
             border-radius: 12px;
             text-align: center;
             border: 2px dashed #cbd5e1;
+            display: none;
         }
 
         #postal-code {
@@ -97,51 +131,136 @@
             font-size: 0.75rem;
             color: #94a3b8;
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: auto; /* Empuja el footer al final */
+            padding-top: 20px;
+        }
+
+        /* Estilo para los polígonos del GeoJSON */
+        .leaflet-interactive {
+            stroke: #2563eb;
+            stroke-width: 2;
+            fill: #60a5fa;
+            fill-opacity: 0.3;
+            transition: fill-opacity 0.2s;
+        }
+
+        .leaflet-interactive:hover {
+            fill-opacity: 0.6;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Generador de Código Postal</h2>
-    
-    <div class="input-group">
-        <label>Código de Ubicación (VM_LEVEL)</label>
-        <input type="text" id="vmLevel" placeholder="Ej: A5899" list="vmOptions">
-        <datalist id="vmOptions">
-            <option value="A5899">A5899</option>
-            <option value="I2026">I2026</option>
-            <option value="M5303">M5303</option>
-        </datalist>
+<div class="main-container">
+    <div class="panel map-panel">
+        <div id="map"></div>
     </div>
 
-    <div class="coords-grid">
+    <div class="panel info-panel">
+        <h2>Zona Postal</h2>
+        
         <div class="input-group">
-            <label>Latitud (A2)</label>
-            <input type="number" id="lat" step="any" placeholder="8.9833">
+            <label>Código de Ubicación Seleccionado (VM_LEVEL)</label>
+            <input type="text" id="vmLevel" placeholder="Haga clic en el mapa..." readonly>
         </div>
-        <div class="input-group">
-            <label>Longitud (B2)</label>
-            <input type="number" id="lng" step="any" placeholder="-79.5167">
+
+        <div class="coords-grid">
+            <div class="input-group">
+                <label>Latitud (A2)</label>
+                <input type="number" id="lat" step="any" placeholder="8.9833">
+            </div>
+            <div class="input-group">
+                <label>Longitud (B2)</label>
+                <input type="number" id="lng" step="any" placeholder="-79.5167">
+            </div>
         </div>
-    </div>
 
-    <button onclick="generarCodigo()">TRANSFORMAR COORDENADAS</button>
+        <button class="btn-calc" onclick="generarCodigo()">TRANSFORMAR COORDENADAS</button>
 
-    <div class="result-box" id="resultContainer" style="display: none;">
-        <label>CÓDIGO POSTAL RESULTANTE</label>
-        <span id="postal-code">---</span>
-    </div>
+        <div class="result-box" id="resultContainer">
+            <label>CÓDIGO POSTAL RESULTANTE</label>
+            <span id="postal-code">---</span>
+        </div>
 
-    <div class="footer">
-        Diseñado por Raúl Víquez<br>
-        Propiedad Intelectual Protegida
+        <div class="footer">
+            Diseñado por Raúl Víquez<br>
+            Propiedad Intelectual Protegida<br>
+            © COTEL Panamá
+        </div>
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <script>
-    // --- Lógica del Sistema ---
+    // --- Configuración del Mapa Leaflet ---
+    // Inicializar el mapa centrado en Panamá
+    const map = L.map('map').setView([8.98, -79.52], 12); // Coordenadas de Ciudad de Panamá, Zoom 12
+
+    // Añadir capa base de OpenStreetMap
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Variable para guardar la capa del GeoJSON
+    let geojsonLayer;
+
+    // Función para manejar clics en los polígonos
+    function onEachFeature(feature, layer) {
+        layer.on({
+            click: function(e) {
+                // 1. Obtener el valor del campo VM_LEVEL
+                const vmLevelValue = feature.properties.VM_LEVEL;
+                
+                // 2. Actualizar el input en el HTML
+                document.getElementById('vmLevel').value = vmLevelValue;
+
+                // 3. (Opcional) Obtener las coordenadas del clic y ponerlas en los inputs
+                document.getElementById('lat').value = e.latlng.lat.toFixed(6);
+                document.getElementById('lng').value = e.latlng.lng.toFixed(6);
+
+                // 4. Resaltar visualmente el polígono cliqueado
+                if (geojsonLayer) {
+                    geojsonLayer.resetStyle(); // Resetea estilos anteriores
+                }
+                layer.setStyle({
+                    fillColor: '#f59e0b', // Color ámbar al cliquear
+                    fillOpacity: 0.7
+                });
+
+                // Ocultar resultado anterior si existe
+                document.getElementById('resultContainer').style.display = 'none';
+            }
+        });
+    }
+
+    // Cargar el archivo GeoJSON
+    fetch('estafetas.geojson')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('No se pudo cargar estafetas.geojson. Asegúrate de ejecutar esto desde un servidor web local.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Crear la capa GeoJSON y añadirla al mapa
+            geojsonLayer = L.geoJSON(data, {
+                onEachFeature: onEachFeature,
+                style: function(feature) {
+                    return {
+                        // Estilo por defecto definido en el CSS (.leaflet-interactive)
+                    };
+                }
+            }).addTo(map);
+        })
+        .catch(error => {
+            console.error('Error al cargar GeoJSON:', error);
+            alert(error.message);
+        });
+
+
+    // --- Lógica del Sistema de Código Postal (Original de Raul Viquez) ---
     const originLat = 10.0;
     const originLng = -83.0;
     const resMacro = 0.143;
@@ -155,76 +274,4 @@
         "C7199":"C2","C8999":"C3","D8799":"D2","E6301":"E2","E6302":"E3","E6312":"E4","E6399":"E5","E8399":"E6","E8699":"E7",
         "F3023":"F2","F3099":"F3","F3105":"F4","F3107":"F5","F3109":"F6","F3199":"F7","F3201":"F8","F3208":"F9","F3213":"FA","F3217":"FB","F3230":"FC","F3299":"FD","F3303":"FE","F3304":"FF","F3319":"FG","F3399":"FH","F4299":"FJ","F8199":"FK","F8299":"FL",
         "G1299":"G2","G2599":"G3","G3199":"G4","G8199":"G5",
-        "H1003":"H2","H1004":"H3","H1006":"H4","H1199":"H5","H1208":"H6","H1299":"H7","H1301":"H8","H1399":"H9",
-        "I2026":"I2","I2099":"I3","I2103":"I4","I2106":"I5","I2108":"I6","I2199":"I7","I2209":"I8","I2220":"I9","I2224":"IA","I2243":"IB","I2299":"IC","I2301":"ID","I2311":"IE","I2315":"IF","I2399":"IG","I2413":"IH","I2426":"IJ","I2432":"IK","I2436":"IL","I2499":"IM","I2538":"IN","I2540":"IP","I2544":"IQ","I2552":"IR","I2554":"IS","I2599":"IT",
-        "J4101":"J2","J4110":"J3","J4122":"J4","J4139":"J5","J4140":"J6","J4144":"J7","J4149":"J8","J4154":"J9","J4158":"JA","J4166":"JB","J4199":"JC",
-        "K4019":"K2","K4201":"K3","K4203":"K4","K4207":"K5","K4209":"K6","K4211":"K7","K4213":"K8","K4215":"K9","K4217":"KA","K4221":"KB","K4299":"KC",
-        "L5029":"L2","L5101":"L3","L5103":"L4","L5105":"L5","L5109":"L6","L5121":"L7","L5199":"L8","L5212":"L9","L5216":"LA","L5223":"LB","L5225":"LC","L5231":"LD","L5299":"LE","L5311":"LF","L5313":"LG","L5399":"LH","L8499":"LJ",
-        "M5303":"M2","M5305":"M3","M5307":"M4","M5311":"M5","M5313":"M6","M5315":"M7","M5317":"M8","M5399":"M9","M8599":"MA"
-    };
-
-    function encodeJS(num, longitud) {
-        const alfa = "23456789ABCDEFGHJKLMNPQRSTVWXZ";
-        let s = "";
-        let n = Math.abs(Math.floor(num));
-        for (let i = 0; i < longitud; i++) {
-            s = alfa.charAt(n % 30) + s;
-            n = Math.floor(n / 30);
-        }
-        return s;
-    }
-
-    function generarCodigo() {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lng = parseFloat(document.getElementById('lng').value);
-        const vmLevel = document.getElementById('vmLevel').value.toUpperCase().trim();
-
-        if (isNaN(lat) || isNaN(lng)) {
-            alert("Error: Ingrese coordenadas válidas.");
-            return;
-        }
-
-        // Búsqueda del prefijo (VLookup)
-        const prefijo = dataTable[vmLevel] || "??";
-
-        // Cálculos de cuadrícula (Lógica original de Raul Viquez)
-        const totalPicoX = Math.floor(((lng - originLng) / resPico) + 0.00001);
-        const totalPicoY = Math.floor(((originLat - lat) / resPico) + 0.00001);
-
-        const totalNanoX = Math.floor(totalPicoX / 8);
-        const totalNanoY = Math.floor(totalPicoY / 8);
-
-        const mx = Math.floor(totalNanoX / 600);
-        const my = Math.floor(totalNanoY / 600);
-
-        const microX = Math.floor((totalNanoX % 600) / 25);
-        const microY = Math.floor((totalNanoY % 600) / 25);
-
-        const nanoX = totalNanoX % 25;
-        const nanoY = totalNanoY % 25;
-
-        const picoX = totalPicoX % 8;
-        const picoY = totalPicoY % 8;
-
-        // Formateo alfanumérico
-        const macroStr = encodeJS((my * MACRO_X_COUNT) + mx, 2);
-        const microStr = encodeJS((microY * 24) + microX, 2);
-        const nanoStr = encodeJS((nanoY * 25) + nanoX, 2);
-        const picoStr = encodeJS((picoY * 8) + picoX, 2);
-
-        let codigoCompleto = prefijo + macroStr + microStr + nanoStr + picoStr;
-        
-        // Aplicar guion después del 5to carácter
-        let finalFormat = codigoCompleto;
-        if (codigoCompleto.length >= 5) {
-            finalFormat = codigoCompleto.substring(0, 5) + "-" + codigoCompleto.substring(5);
-        }
-
-        // Mostrar resultado
-        document.getElementById('postal-code').innerText = finalFormat;
-        document.getElementById('resultContainer').style.display = 'block';
-    }
-</script>
-
-</body>
-</html>
+        "H1003":"H2","H1004":"H3","H1006":"H4","H1199":"H5","H1208":"H6","H1299":"H7","H1301":"H8","H139
