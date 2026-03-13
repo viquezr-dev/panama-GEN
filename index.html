@@ -140,7 +140,7 @@ const mapaSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z
 const map = L.map('map', { zoomControl: false, layers: [mapaSatelite] }).setView([8.98, -79.52], 12);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-let layerZonas = L.geoJSON(null, { style: { color: "#f59e0b", weight: 2, fillOpacity: 0.15 } }).addTo(map);
+let layerZonas = L.geoJSON(null, { style: { color: "#f59e0b", weight: 2, fillOpacity: 0.05 } }).addTo(map);
 let markerLayer = L.layerGroup().addTo(map);
 
 fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(data));
@@ -221,3 +221,4 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
+
