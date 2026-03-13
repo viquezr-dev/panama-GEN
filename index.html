@@ -215,25 +215,31 @@ map.on('click', function(e) {
     if (map.getZoom() < 17) return;
 
     let encontrada = null;
+    console.log("Clic detectado en:", e.latlng); 
+
     layerZonas.eachLayer(layer => {
-        const pt = [e.latlng.lng, e.latlng.lat];
+        const pt = [e.latlng.lng, e.latlng.lat]; // Longitud, Latitud
         const geom = layer.feature.geometry;
+
         if (geom.type === "Polygon") {
             if (pointInPolygon(pt, geom.coordinates[0])) encontrada = layer.feature.properties;
-        } else {
-            geom.coordinates.forEach(poly => { if (pointInPolygon(pt, poly[0])) encontrada = layer.feature.properties; });
+        } else if (geom.type === "MultiPolygon") { 
+            geom.coordinates.forEach(polygon => {
+                if (pointInPolygon(pt, polygon[0])) encontrada = layer.feature.properties;
+            });
         }
     });
 
     markerLayer.clearLayers();
+    
 
     if (!encontrada) {
-        L.popup().setLatLng(e.latlng).setContent('<div class="popup-externo">⚠️ <b>ÁREA NO ESTABLECIDA</b><small>Fuera de zona postal</small></div>').openOn(map);
+        console.log("No se encontró coincidencia."); 
+        L.popup().setLatLng(e.latlng).setContent('<div class="popup-externo">⚠️ <b>ÁREA NO ESTABLECIDA</b><br><small>Fuera de zona postal</small></div>').openOn(map);
         document.getElementById('vmLevel').value = "DESCONOCIDO";
         document.getElementById('postal-code-panel').innerText = "---";
         return;
     }
-
     const res = getGridInfo(e.latlng.lat, e.latlng.lng);
     const zonaID = encontrada.VM_LEVEL2D || TABLA_BUSQUEDA[encontrada.VM_LEVEL] || "XX";
     const fullCode = zonaID + res.macro + res.micro + res.nano + res.pico;
@@ -256,4 +262,5 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
+
 
