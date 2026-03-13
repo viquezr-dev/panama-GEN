@@ -243,13 +243,23 @@ map.on('locationerror', function(e) {
     alert("No se pudo obtener tu ubicación: " + e.message);
 });
 
-    
-    
-    
+    function removerUbicacion() {
+    if (userMarker) {
+        map.removeLayer(userMarker); 
+        userMarker = null;
+    }
+   
+    map.eachLayer(layer => {
+        if (layer instanceof L.Circle && layer !== layerZonas) { 
+            map.removeLayer(layer); 
+        }
+    });
+}
     
     
     map.on('click', function(e) {
-    if (map.getZoom() < 17) return;
+    removerUbicacion();
+        if (map.getZoom() < 17) return;
 
     let encontrada = null;
     layerZonas.eachLayer(layer => {
@@ -293,4 +303,5 @@ map.on('locationerror', function(e) {
 </script>
 </body>
 </html>
+
 
