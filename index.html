@@ -3,19 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>SISTEMA POSTAL PANAMÁ</title>
+    <title>SISTEMA POSTAL PANAMÁ </title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --panel-bg: #ffffff; --text-main: #334155; --text-light: #94a3b8; --accent-soft: #0ea5e9; --warning: #f59e0b; --danger: #e11d48; --bg-body: #f1f5f9; }
+        :root {
+            --panel-bg: #ffffff;
+            --text-main: #334155;
+            --text-light: #94a3b8;
+            --accent-soft: #0ea5e9;
+            --warning: #f59e0b;
+            --danger: #e11d48;
+            --bg-body: #f1f5f9;
+        }
+
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-body); overflow: hidden; }
         .main-layout { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
-        .info-panel { width: 360px; background: var(--panel-bg); box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 1000; display: flex; flex-direction: column; padding: 30px; overflow-y: auto; }
-        #map { flex-grow: 1; height: 100%; background: #e5e7eb; }
 
-        @media (max-width: 768px) {
-            .main-layout { flex-direction: column-reverse !important; }
-            .info-panel {
+        .info-panel {
             width: 360px;
             background: var(--panel-bg);
             box-shadow: 2px 0 10px rgba(0,0,0,0.05);
@@ -25,8 +32,16 @@
             padding: 30px;
             overflow-y: auto;
         }
-            #map { flex: 1 1 60% !important; width: 100% !important; }
+
+        #map { flex-grow: 1; height: 100%; background: #e5e7eb; }
+
+        @media (max-width: 768px) {
+            .main-layout { flex-direction: column-reverse; }
+            .info-panel { width: 100%; height: 45%; padding: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
             .instruction-box { display: none; }
+            h2 { font-size: 0.9rem; margin-bottom: 10px; }
+            .input-group { margin-bottom: 10px; }
+            #postal-code-panel { font-size: 1.5rem; }
         }
 
         .instruction-box {
@@ -39,19 +54,25 @@
             color: var(--text-main);
             line-height: 1.5;
         }
-         h2 { 
-            color: var(--text-main); 
-            font-size: 1rem; 
-            margin: 0 0 20px 0; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: 700; 
-            border-left: 4px solid var(--accent-soft); 
-            padding-left: 10px; 
-        }
+        .instruction-box b { color: var(--accent-soft); }
+
+        h2 { color: var(--text-main); font-size: 1rem; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; border-left: 4px solid var(--accent-soft); padding-left: 10px; }
+
         .input-group { margin-bottom: 20px; }
-        label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-light); margin-bottom: 8px; }
-        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; }
+        label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-light); margin-bottom: 8px; text-transform: uppercase; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            background: #fcfcfc;
+            color: var(--text-main);
+            box-sizing: border-box;
+        }
+
         .result-box {
             margin-top: auto;
             padding: 20px;
@@ -60,7 +81,8 @@
             border-radius: 12px;
             text-align: center;
         }
-         #postal-code-panel {
+
+        #postal-code-panel {
             display: block;
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.8rem;
@@ -68,41 +90,66 @@
             margin-top: 5px;
             color: var(--text-main);
         }
-         .footer { 
-            text-align: center; 
-            font-size: 0.7rem; 
-            color: var(--text-light); 
-            padding-top: 20px; 
-        }
-        .zoom-warning { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(245, 158, 11, 0.9); color: white; padding: 10px 20px; border-radius: 20px; display: none; pointer-events: none; }
-        .gps-btn { background: white; width: 34px; height: 34px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .popup-externo { color: var(--danger); padding: 5px; text-align: center; }
 
+        .leaflet-popup-content-wrapper { border-radius: 8px; }
+        .popup-container { text-align: center; padding: 5px; }
+        .popup-tag { font-size: 10px; color: var(--text-light); text-transform: uppercase; font-weight: 700; }
+        .popup-code { font-size: 18px; font-weight: 700; color: var(--accent-soft); font-family: 'JetBrains Mono'; margin: 5px 0; }
+        .popup-zona { font-size: 14px; font-weight: 600; color: var(--warning); }
+        
+        .popup-externo { color: var(--danger); padding: 10px; text-align: center; }
+        .popup-externo b { display: block; font-size: 13px; margin-bottom: 4px; }
+
+        .footer { text-align: center; font-size: 0.7rem; color: var(--text-light); padding-top: 20px; }
+
+        .zoom-warning {
+            position: absolute; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            z-index: 2000; 
+            background: rgba(245, 158, 11, 0.9); 
+            color: white;
+            padding: 10px 20px; 
+            border-radius: 20px; 
+            font-weight: 600; 
+            display: none;
+            width: auto; 
+            max-width: 80%; 
+            white-space: nowrap;
+            pointer-events: none; 
+        }
+        
+        /* Botón GPS */
+        .gps-btn { background: white; width: 34px; height: 34px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div id="zoom-alert" class="zoom-warning">⚠️ Acerque más el mapa</div>
+<div id="zoom-alert" class="zoom-warning">⚠️ Acerque más el mapa para ver las viviendas</div>
 
 <div class="main-layout">
     <div class="info-panel">
         <h2>Generador de Códigos postales</h2>
         <div class="instruction-box">
-            <b>Instrucciones:</b><br>1. Haga clic en un punto conocido.<br>2. El área en amarillo es la zona postal.
+            <b>Instrucciones:</b><br>
+            1. Haga clic en un punto conocido.<br>
+            2. El área en <span style="color:var(--warning); font-weight:700">amarillo</span> es la zona postal.<br>
+            3. El código obtenido es el <b>Código Postal</b>.
         </div>
         <div class="input-group">
             <label>Zona Postal (COTEL)</label>
-            <input type="text" id="vmLevel" readonly>
+            <input type="text" id="vmLevel" placeholder="Esperando selección..." readonly>
         </div>
         <div class="input-group">
-            <label>Coordenadas</label>
-            <input type="text" id="coordsInput" readonly>
+            <label>Coordenadas (Lat, Lng)</label>
+            <input type="text" id="coordsInput" placeholder="---, ---" readonly>
         </div>
         <div class="result-box">
             <label>CÓDIGO POSTAL</label>
             <span id="postal-code-panel">---</span>
         </div>
-        <div class="footer" style="text-align:center; font-size:0.7rem; color:#94a3b8; margin-top:20px;"><strong>Raúl Víquez</strong> - COTEL 2026</div>
+        <div class="footer"><strong>Raúl Víquez</strong> - COTEL Panamá 2026</div>
     </div>
     <div id="map"></div>
 </div>
@@ -168,31 +215,25 @@ map.on('click', function(e) {
     if (map.getZoom() < 17) return;
 
     let encontrada = null;
-    console.log("Clic detectado en:", e.latlng); 
-
     layerZonas.eachLayer(layer => {
-        const pt = [e.latlng.lng, e.latlng.lat]; // Longitud, Latitud
+        const pt = [e.latlng.lng, e.latlng.lat];
         const geom = layer.feature.geometry;
-
         if (geom.type === "Polygon") {
             if (pointInPolygon(pt, geom.coordinates[0])) encontrada = layer.feature.properties;
-        } else if (geom.type === "MultiPolygon") { 
-            geom.coordinates.forEach(polygon => {
-                if (pointInPolygon(pt, polygon[0])) encontrada = layer.feature.properties;
-            });
+        } else {
+            geom.coordinates.forEach(poly => { if (pointInPolygon(pt, poly[0])) encontrada = layer.feature.properties; });
         }
     });
 
     markerLayer.clearLayers();
-    
 
     if (!encontrada) {
-        console.log("No se encontró coincidencia."); 
-        L.popup().setLatLng(e.latlng).setContent('<div class="popup-externo">⚠️ <b>ÁREA NO ESTABLECIDA</b><br><small>Fuera de zona postal</small></div>').openOn(map);
+        L.popup().setLatLng(e.latlng).setContent('<div class="popup-externo">⚠️ <b>ÁREA NO CONOCIDA</b><small>Fuera de zona postal</small></div>').openOn(map);
         document.getElementById('vmLevel').value = "DESCONOCIDO";
         document.getElementById('postal-code-panel').innerText = "---";
         return;
     }
+
     const res = getGridInfo(e.latlng.lat, e.latlng.lng);
     const zonaID = encontrada.VM_LEVEL2D || TABLA_BUSQUEDA[encontrada.VM_LEVEL] || "XX";
     const fullCode = zonaID + res.macro + res.micro + res.nano + res.pico;
@@ -215,6 +256,3 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
-
-
-
