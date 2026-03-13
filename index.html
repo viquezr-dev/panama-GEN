@@ -169,7 +169,7 @@ const GpsControl = L.Control.extend({
     onAdd: function(map) {
         let btn = L.DomUtil.create('button', 'gps-btn');
         btn.innerHTML = '📍';
-        btn.onclick = () => map.locate({setView: true, maxZoom: 17});
+        btn.onclick = () => map.locate({setView: true, maxZoom: 17, watch: true});
         return btn;
     }
 });
@@ -210,8 +210,45 @@ function pointInPolygon(point, vs) {
     }
     return inside;
 }
+    let userMarker = null;
 
-map.on('click', function(e) {
+// Evento que se dispara al obtener la ubicación exitosamente
+map.on('locationfound', function(e) {
+    // Si ya existe un marcador, lo eliminamos
+    if (userMarker) {
+        map.removeLayer(userMarker);
+    }
+    
+    // Crear el "punto azul"
+    userMarker = L.circleMarker(e.latlng, {
+        radius: 8,
+        fillColor: "#0ea5e9",
+        color: "#ffffff",
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 1
+    }).addTo(map);
+
+    // Opcional: Añadir un círculo de precisión
+    L.circle(e.latlng, e.accuracy / 2, {
+        color: '#0ea5e9',
+        fillColor: '#0ea5e9',
+        fillOpacity: 0.2,
+        weight: 1
+    }).addTo(map);
+});
+
+// Evento por si falla la geolocalización
+map.on('locationerror', function(e) {
+    alert("No se pudo obtener tu ubicación: " + e.message);
+});
+
+    
+    
+    
+    
+    
+    map.on('click', function(e) {
     if (map.getZoom() < 17) return;
 
     let encontrada = null;
@@ -256,3 +293,4 @@ map.on('click', function(e) {
 </script>
 </body>
 </html>
+
