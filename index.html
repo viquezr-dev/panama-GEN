@@ -174,13 +174,12 @@ let lineasCercanas = L.layerGroup().addTo(map); // Para la línea punteada
 fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(data));
 
 // Cargar Estafetas Puntos (estafetasp.geojson)
-let estafetasData = [];
 fetch('estafetasp.geojson').then(r => r.json()).then(data => {
     estafetasData = data.features;
     L.geoJSON(data, {
         pointToLayer: (feature, latlng) => {
             return L.circleMarker(latlng, {
-                radius: 6,
+                radius: 7, // Un poco más grande para facilitar el toque
                 fillColor: "#e11d48",
                 color: "#fff",
                 weight: 2,
@@ -188,7 +187,25 @@ fetch('estafetasp.geojson').then(r => r.json()).then(data => {
             });
         },
         onEachFeature: (feature, layer) => {
-            layer.bindPopup(`<b>Estafeta:</b> ${feature.properties.ESTAF_NAME}<br><b>Código:</b> ${feature.properties.ESTAF_CODE}`);
+           
+            layer.on('click', function(e) {
+                L.DomEvent.stopPropagation(e); 
+                
+                const props = feature.properties;
+                const content = `
+                    <div class="popup-container">
+                        <span class="popup-tag" style="color:#e11d48">Estafeta Postal</span>
+                        <div class="popup-code" style="color:var(--text-main); font-size:15px;">${props.ESTAF_NAME}</div>
+                        <hr style="border:0; border-top:1px solid #eee; margin:8px 0;">
+                        <div style="text-align:left; font-size:12px;">
+                            <b>Código:</b> ${props.ESTAF_CODE}<br>
+                            <b>Ruta:</b> ${props.RUTA || 'N/A'}<br>
+                            <b>Nivel:</b> ${props.VM_LEVEL || 'N/A'}
+                        </div>
+                    </div>
+                `;
+                layer.bindPopup(content).openPopup();
+            });
         }
     }).addTo(estafetasPoints);
 });
