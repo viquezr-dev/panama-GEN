@@ -100,27 +100,23 @@
         .popup-externo { color: var(--danger); padding: 10px; text-align: center; }
         .popup-externo b { display: block; font-size: 13px; margin-bottom: 4px; }
 
-        .footer { text-align: center; font-size: 0.7rem; color: var(--text-light); padding-top: 20px; }
-
-        .zoom-warning {
-            position: absolute; 
-            top: 20px; 
-            left: 50%; 
-            transform: translateX(-50%);
-            z-index: 2000; 
-            background: rgba(245, 158, 11, 0.9); 
+        /* Estilo para el botón de estafeta cercana en el popup */
+        .btn-near {
+            background: var(--accent-soft);
             color: white;
-            padding: 10px 20px; 
-            border-radius: 20px; 
-            font-weight: 600; 
-            display: none;
-            width: auto; 
-            max-width: 80%; 
-            white-space: nowrap;
-            pointer-events: none; 
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+            text-transform: uppercase;
         }
-        
-        /* Botón GPS */
+
+        .footer { text-align: center; font-size: 0.7rem; color: var(--text-light); padding-top: 20px; }
+        .zoom-warning { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(245, 158, 11, 0.9); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; display: none; pointer-events: none; }
         .gps-btn { background: white; width: 34px; height: 34px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     </style>
 </head>
@@ -168,6 +164,45 @@ const mapaSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z
 const map = L.map('map', { zoomControl: false, layers: [mapaSatelite] }).setView([8.98, -79.52], 12);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
+// Capas de datos
+let layerZonas = L.geoJSON(null, { style: { color: "#f59e0b", weight: 2, fillOpacity: 0.05 } }).addTo(map);
+let markerLayer = L.layerGroup().addTo(map);
+let estafetasPoints = L.layerGroup().addTo(map);
+let lineasCercanas = L.layerGroup().addTo(map); // Para la línea punteada
+
+// Cargar Estafetas Polígonos
+fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(data));
+
+// Cargar Estafetas Puntos (estafetasp.geojson)
+let estafetasData = [];
+fetch('estafetasp.geojson').then(r => r.json()).then(data => {
+    estafetasData = data.features;
+    L.geoJSON(data, {
+        pointToLayer: (feature, latlng) => {
+            return L.circleMarker(latlng, {
+                radius: 6,
+                fillColor: "#e11d48",
+                color: "#fff",
+                weight: 2,
+                fillOpacity: 1
+            });
+        },
+        onEachFeature: (feature, layer) => {
+            layer.bindPopup(`<b>Estafeta:</b> ${feature.properties.ESTAF_NAME}<br><b>Código:</b> ${feature.properties.ESTAF_CODE}`);
+        }
+    }).addTo(estafetasPoints);
+});
+
+// Función de distancia (Haversine)
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radio Tierra km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 // Botón GPS
 const GpsControl = L.Control.extend({
     onAdd: function(map) {
@@ -178,11 +213,6 @@ const GpsControl = L.Control.extend({
     }
 });
 new GpsControl({position: 'bottomright'}).addTo(map);
-
-let layerZonas = L.geoJSON(null, { style: { color: "#f59e0b", weight: 2, fillOpacity: 0.05 } }).addTo(map);
-let markerLayer = L.layerGroup().addTo(map);
-
-fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(data));
 
 map.on('zoomend', function() {
     document.getElementById('zoom-alert').style.display = (map.getZoom() < 17) ? 'block' : 'none';
@@ -214,56 +244,54 @@ function pointInPolygon(point, vs) {
     }
     return inside;
 }
-    let userMarker = null;
 
-// Evento que se dispara al obtener la ubicación exitosamente
+let userMarker = null;
+
 map.on('locationfound', function(e) {
-    // Si ya existe un marcador, lo eliminamos
-    if (userMarker) {
-        map.removeLayer(userMarker);
-    }
-    
-    // Crear el "punto azul"
-    userMarker = L.circleMarker(e.latlng, {
-        radius: 8,
-        fillColor: "#0ea5e9",
-        color: "#ffffff",
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 1
-    }).addTo(map);
-
-    // Opcional: Añadir un círculo de precisión
-    L.circle(e.latlng, e.accuracy / 2, {
-        color: '#0ea5e9',
-        fillColor: '#0ea5e9',
-        fillOpacity: 0.2,
-        weight: 1
-    }).addTo(map);
+    if (userMarker) map.removeLayer(userMarker);
+    userMarker = L.circleMarker(e.latlng, { radius: 8, fillColor: "#0ea5e9", color: "#ffffff", weight: 3, opacity: 1, fillOpacity: 1 }).addTo(map);
 });
 
-// Evento por si falla la geolocalización
-map.on('locationerror', function(e) {
-    alert("No se pudo obtener tu ubicación: " + e.message);
-});
+function removerUbicacion() {
+    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+    lineasCercanas.clearLayers();
+}
 
-    function removerUbicacion() {
-    if (userMarker) {
-        map.removeLayer(userMarker); 
-        userMarker = null;
-    }
-   
-    map.eachLayer(layer => {
-        if (layer instanceof L.Circle && layer !== layerZonas) { 
-            map.removeLayer(layer); 
+// Función para encontrar estafeta más cercana
+function buscarEstafetaCercana(lat, lng) {
+    let minDest = Infinity;
+    let estafetaCercana = null;
+
+    estafetasData.forEach(f => {
+        let d = getDistance(lat, lng, f.geometry.coordinates[1], f.geometry.coordinates[0]);
+        if (d < minDest) {
+            minDest = d;
+            estafetaCercana = f;
         }
     });
+
+    if (estafetaCercana) {
+        lineasCercanas.clearLayers();
+        let estCoord = [estafetaCercana.geometry.coordinates[1], estafetaCercana.geometry.coordinates[0]];
+        
+        // Dibujar línea punteada
+        L.polyline([[lat, lng], estCoord], {
+            color: '#e11d48',
+            weight: 2,
+            dashArray: '5, 10',
+            opacity: 0.8
+        }).addTo(lineasCercanas);
+
+        L.popup()
+            .setLatLng(estCoord)
+            .setContent(`<b>${estafetaCercana.properties.ESTAF_NAME}</b><br>Distancia: ${minDest.toFixed(2)} km`)
+            .openOn(map);
+    }
 }
-    
-    
-    map.on('click', function(e) {
+
+map.on('click', function(e) {
     removerUbicacion();
-        if (map.getZoom() < 17) return;
+    if (map.getZoom() < 17) return;
 
     let encontrada = null;
     layerZonas.eachLayer(layer => {
@@ -295,17 +323,18 @@ map.on('locationerror', function(e) {
     document.getElementById('postal-code-panel').innerText = formatted;
 
     L.circleMarker(e.latlng, { radius: 6, fillColor: "#0ea5e9", color: "#fff", weight: 2, fillOpacity: 1 }).addTo(markerLayer);
+    
+    // Popup con botón de estafeta cercana
     L.popup({ offset: [0, -5] }).setLatLng(e.latlng).setContent(`
         <div class="popup-container">
             <span class="popup-tag">Código Postal</span>
             <div class="popup-code">${formatted}</div>
             <span class="popup-tag">Zona</span>
             <div class="popup-zona">${encontrada.VM_LEVEL}</div>
+            <button class="btn-near" onclick="buscarEstafetaCercana(${e.latlng.lat}, ${e.latlng.lng})">Estafeta más cercana</button>
         </div>
     `).openOn(map);
 });
 </script>
 </body>
 </html>
-
-
