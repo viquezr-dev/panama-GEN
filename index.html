@@ -174,54 +174,57 @@ let lineasCercanas = L.layerGroup().addTo(map); // Para la línea punteada
 fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(data));
 
 // Cargar Estafetas Puntos (estafetasp.geojson)
+let estafetasData = [];
 fetch('estafetasp.geojson').then(r => r.json()).then(data => {
     estafetasData = data.features;
-    L.geoJSON(data, {
-        pointToLayer: (latlng) => {
+    
+    // Crear la capa GeoJSON
+    const geojsonLayer = L.geoJSON(data, {
+        pointToLayer: (feature, latlng) => {
+            // Usamos CircleMarker pero con un radio fijo
             return L.circleMarker(latlng, {
-                radius: 7,
+                radius: 8,
                 fillColor: "#e11d48",
-                color: "#fff",
+                color: "#ffffff",
                 weight: 2,
-                fillOpacity: 0.8
+                fillOpacity: 0.9,
+                pane: 'markerPane' // Forzamos que esté en el panel de marcadores (siempre arriba)
             });
         },
         onEachFeature: (feature, layer) => {
             const props = feature.properties;
             const content = `
-                <div style="text-align:center; min-width:120px;">
+                <div style="text-align:center; padding:5px;">
                     <b style="color:#e11d48; font-size:13px;">${props.ESTAF_NAME}</b><br>
-                    <small>Código: ${props.ESTAF_CODE}</small><br>
-                    <small>Ruta: ${props.RUTA || 'N/A'}</small>
+                    <span style="font-size:11px; color:#64748b;">Código: ${props.ESTAF_CODE}</span>
                 </div>
             `;
 
-            // Vincular el popup pero configurarlo para que sea sutil
-            layer.bindPopup(content, { 
-                closeButton: false, 
-                offset: L.point(0, -7),
-                className: 'estafeta-hover-popup'
+            layer.bindTooltip(content, {
+                direction: 'top',
+                sticky: false,
+                offset: [0, -10],
+                className: 'estafeta-tooltip'
             });
 
-            // EVENTO: Al pasar el mouse por encima (Hover)
+            // Al pasar el mouse, resaltamos
             layer.on('mouseover', function (e) {
-                this.openPopup();
-                this.setStyle({ fillOpacity: 1, radius: 9 }); // Efecto visual de resaltado
+                this.setStyle({ fillColor: "#000", radius: 10 });
             });
 
-            // EVENTO: Al quitar el mouse
             layer.on('mouseout', function (e) {
-                this.closePopup();
-                this.setStyle({ fillOpacity: 0.8, radius: 7 }); // Regresa a la normalidad
+                this.setStyle({ fillColor: "#e11d48", radius: 8 });
             });
 
-            // EVENTO: Si haces clic (por si quieres que la línea punteada también funcione desde la estafeta)
-            layer.on('click', function(e) {
+            // IMPORTANTE: Detener la propagación para que no dispare el clic del mapa
+            layer.on('mousedown', function(e) {
                 L.DomEvent.stopPropagation(e);
-                // Aquí podrías disparar otra acción si quisieras
             });
         }
     }).addTo(estafetasPoints);
+
+    // Forzar que la capa de puntos esté siempre al frente de los polígonos
+    estafetasPoints.bringToFront();
 });
 
 // Función de distancia (Haversine)
