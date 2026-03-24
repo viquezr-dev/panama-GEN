@@ -177,34 +177,48 @@ fetch('estafetas.geojson').then(r => r.json()).then(data => layerZonas.addData(d
 fetch('estafetasp.geojson').then(r => r.json()).then(data => {
     estafetasData = data.features;
     L.geoJSON(data, {
-        pointToLayer: (feature, latlng) => {
+        pointToLayer: (latlng) => {
             return L.circleMarker(latlng, {
-                radius: 7, // Un poco más grande para facilitar el toque
+                radius: 7,
                 fillColor: "#e11d48",
                 color: "#fff",
                 weight: 2,
-                fillOpacity: 1
+                fillOpacity: 0.8
             });
         },
         onEachFeature: (feature, layer) => {
-           
+            const props = feature.properties;
+            const content = `
+                <div style="text-align:center; min-width:120px;">
+                    <b style="color:#e11d48; font-size:13px;">${props.ESTAF_NAME}</b><br>
+                    <small>Código: ${props.ESTAF_CODE}</small><br>
+                    <small>Ruta: ${props.RUTA || 'N/A'}</small>
+                </div>
+            `;
+
+            // Vincular el popup pero configurarlo para que sea sutil
+            layer.bindPopup(content, { 
+                closeButton: false, 
+                offset: L.point(0, -7),
+                className: 'estafeta-hover-popup'
+            });
+
+            // EVENTO: Al pasar el mouse por encima (Hover)
+            layer.on('mouseover', function (e) {
+                this.openPopup();
+                this.setStyle({ fillOpacity: 1, radius: 9 }); // Efecto visual de resaltado
+            });
+
+            // EVENTO: Al quitar el mouse
+            layer.on('mouseout', function (e) {
+                this.closePopup();
+                this.setStyle({ fillOpacity: 0.8, radius: 7 }); // Regresa a la normalidad
+            });
+
+            // EVENTO: Si haces clic (por si quieres que la línea punteada también funcione desde la estafeta)
             layer.on('click', function(e) {
-                L.DomEvent.stopPropagation(e); 
-                
-                const props = feature.properties;
-                const content = `
-                    <div class="popup-container">
-                        <span class="popup-tag" style="color:#e11d48">Estafeta Postal</span>
-                        <div class="popup-code" style="color:var(--text-main); font-size:15px;">${props.ESTAF_NAME}</div>
-                        <hr style="border:0; border-top:1px solid #eee; margin:8px 0;">
-                        <div style="text-align:left; font-size:12px;">
-                            <b>Código:</b> ${props.ESTAF_CODE}<br>
-                            <b>Ruta:</b> ${props.RUTA || 'N/A'}<br>
-                            <b>Nivel:</b> ${props.VM_LEVEL || 'N/A'}
-                        </div>
-                    </div>
-                `;
-                layer.bindPopup(content).openPopup();
+                L.DomEvent.stopPropagation(e);
+                // Aquí podrías disparar otra acción si quisieras
             });
         }
     }).addTo(estafetasPoints);
