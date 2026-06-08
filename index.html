@@ -37,11 +37,15 @@
 
         @media (max-width: 768px) {
             .main-layout { flex-direction: column-reverse; }
-            .info-panel { width: 100%; height: 45%; padding: 15px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); }
+            .info-panel { width: 100%; height: auto; max-height: 50vh; padding: 12px; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); overflow-y: auto; }
             .instruction-box { display: none; }
-            h2 { font-size: 0.9rem; margin-bottom: 10px; }
-            .input-group { margin-bottom: 10px; }
-            #postal-code-panel { font-size: 1.5rem; }
+            h2 { font-size: 0.8rem; margin: 0 0 8px 0; margin-bottom: 8px; }
+            .input-group { margin-bottom: 8px; }
+            label { font-size: 0.65rem; margin-bottom: 4px; }
+            input { padding: 8px; font-size: 0.85rem; }
+            .result-box { margin-top: 8px; margin-bottom: 8px; padding: 12px; }
+            #postal-code-panel { font-size: 1.3rem; margin-top: 3px; }
+            .footer { font-size: 0.65rem; padding-top: 4px; margin-top: 4px; }
         }
 
         .instruction-box {
