@@ -56,7 +56,7 @@
         }
         .instruction-box b { color: var(--accent-soft); }
 
-        h2 { color: var(--text-main); font-size: 1rem; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; border-left: 4px solid var(--accent-soft); padding-left: 10px; }
+        h2 { color: var(--text-main); font-size: 1rem; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; border-left: 4px solid var(--accent-soft); padding-left: 12px; }
 
         .input-group { margin-bottom: 20px; }
         label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--text-light); margin-bottom: 8px; text-transform: uppercase; }
@@ -74,7 +74,7 @@
         }
 
         .result-box {
-            margin-top: auto;
+            margin-top: 10px;
             padding: 20px;
             background: #f8fafc;
             border: 1px dashed var(--accent-soft);
@@ -115,8 +115,8 @@
             text-transform: uppercase;
         }
 
-        .footer { text-align: center; font-size: 0.7rem; color: var(--text-light); padding-top: 20px; }
-        .zoom-warning { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(245, 158, 11, 0.9); color: white; padding: 10px 20px; border-radius: 20px; font-weight: 600; display: none; pointer-events: none; }
+        .footer { text-align: center; font-size: 0.7rem; color: var(--text-light); padding-top: 15px; margin-top: auto; }
+        .zoom-warning { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(245, 158, 11, 0.9); color: white; padding: 10px 20px; border-radius: 6px; display: none; }
         .gps-btn { background: white; width: 34px; height: 34px; border-radius: 4px; border: 1px solid #ccc; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
     </style>
 </head>
@@ -155,9 +155,9 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const TABLA_BUSQUEDA = { "A5899":"A2","A6000":"A3","A6099":"A4","A6123":"A5","A6130":"A6","A6132":"A7","A6133":"A8","A6134":"A9","A6135":"AA","A6143":"AB","A6199":"AC","A6215":"AD","A6216":"AE","A6218":"AF","A6219":"AG","A6224":"AH","A6238":"AJ","A6239":"AK","A6260":"AL","A6299":"AM","A6347":"AN","A6350":"AP","A6399":"AQ","A7307":"AR","A7399":"AS","B7042":"B2","B7099":"B3","B7113":"B4","B7115":"B5","B7117":"B6","B7121":"B7","B7199":"B8","B7231":"B9","B7241":"BA","B7299":"BB","B7321":"BC","B7399":"BD","B8899":"BE","C7199":"C2","C8999":"C3","D8799":"D2","E6301":"E2","E6302":"E3","E6312":"E4","E6399":"E5","E8399":"E6","E8699":"E7","F3023":"F2","F3099":"F3","F3105":"F4","F3107":"F5","F3109":"F6","F3199":"F7","F3201":"F8","F3208":"F9","F3213":"FA","F3217":"FB","F3230":"FC","F3299":"FD","F3303":"FE","F3304":"FF","F3319":"FG","F3399":"FH","F4299":"FJ","F8199":"FK","F8299":"FL","G1299":"G2","G2599":"G3","G3199":"G4","G8199":"G5","H1003":"H2","H1004":"H3","H1006":"H4","H1199":"H5","H1208":"H6","H1299":"H7","H1301":"H8","H1399":"H9","I2026":"I2","I2099":"I3","I2103":"I4","I2106":"I5","I2108":"I6","I2199":"I7","I2209":"I8","I2220":"I9","I2224":"IA","I2243":"IB","I2299":"IC","I2301":"ID","I2311":"IE","I2315":"IF","I2399":"IG","I2413":"IH","I2426":"IJ","I2432":"IK","I2436":"IL","I2499":"IM","I2538":"IN","I2540":"IP","I2544":"IQ","I2552":"IR","I2554":"IS","I2599":"IT","J4101":"J2","J4110":"J3","J4122":"J4","J4139":"J5","J4140":"J6","J4144":"J7","J4149":"J8","J4154":"J9","J4158":"JA","J4166":"JB","J4199":"JC","K4019":"K2","K4201":"K3","K4203":"K4","K4207":"K5","K4209":"K6","K4211":"K7","K4213":"K8","K4215":"K9","K4217":"KA","K4221":"KB","K4299":"KC","L5029":"L2","L5101":"L3","L5103":"L4","L5105":"L5","L5109":"L6","L5121":"L7","L5199":"L8","L5212":"L9","L5216":"LA","L5223":"LB","L5225":"LC","L5231":"LD","L5299":"LE","L5311":"LF","L5313":"LG","L5399":"LH","L8499":"LJ","M5303":"M2","M5305":"M3","M5307":"M4","M5311":"M5","M5313":"M6","M5315":"M7","M5317":"M8","M5399":"M9","M8599":"MA" };
+const TABLA_BUSQUEDA = { "A5899":"A2","A6000":"A3","A6099":"A4","A6123":"A5","A6130":"A6","A6132":"A7","A6133":"A8","A6134":"A9","A6135":"AA","A6143":"AB","A6199":"AC","A6215":"AD","A6216":"AE","A6217":"AF","A6219":"AG","A6220":"AH","A6222":"AI","A6223":"AJ","A6232":"AK","A6250":"AL","A6301":"AM","A6302":"AN","A6303":"AO","A6304":"AP","A6305":"AQ","A6306":"AR","A6307":"AS","A6308":"AT","A6309":"AU","A6320":"AV","A6400":"AW","A6499":"AX","A6500":"AY","A6599":"AZ","A6700":"B0","A6799":"B1","A6800":"B2","A6899":"B3","A7000":"B4","A7099":"B5","A7200":"B6","A7299":"B7","A7300":"B8","A7324":"B9","A7399":"BA","A7400":"BB","A7499":"BC","A7500":"BD","A7599":"BE","A7700":"BF","A7799":"BG","A7800":"BH","A7899":"BI","A7900":"BJ","A7999":"BK","A8000":"BL","A8099":"BM","A8200":"BN","A8299":"BO","A8300":"BP","A8399":"BQ","A8400":"BR","A8499":"BS","A8500":"BT","A8599":"BU","A8600":"BV","A8699":"BW","A8700":"BX","A8799":"BY","A8800":"BZ","A8899":"C0","A9000":"C1","A9099":"C2","A9100":"C3","A9199":"C4","A9200":"C5","A9299":"C6","A9300":"C7","A9399":"C8","A9400":"C9","A9499":"CA","A9500":"CB","A9599":"CC","A9600":"CD","A9699":"CE","A9700":"CF","A9799":"CG","A9800":"CH","A9899":"CI","A9900":"CJ","A9999":"CK","B0000":"CL","B0099":"CM","B0100":"CN","B0199":"CO","B0200":"CP","B0299":"CQ","B0300":"CR","B0399":"CS","B0400":"CT","B0499":"CU","B0500":"CV","B0599":"CW","B0600":"CX","B0699":"CY","B0700":"CZ","B0799":"D0","B0800":"D1","B0899":"D2","B0900":"D3","B0999":"D4","B1000":"D5","B1099":"D6","B1100":"D7","B1199":"D8","B1200":"D9","B1299":"DA","B1300":"DB","B1399":"DC","B1400":"DD","B1499":"DE","B1500":"DF","B1599":"DG","B1600":"DH","B1699":"DI","B1700":"DJ","B1799":"DK","B1800":"DL","B1899":"DM","B1900":"DN","B1999":"DO","B2000":"DP","B2099":"DQ","B2100":"DR","B2199":"DS","B2200":"DT","B2299":"DU","B2300":"DV","B2399":"DW","B2400":"DX","B2499":"DY","B2500":"DZ","B2599":"E0","B2600":"E1","B2699":"E2","B2700":"E3","B2799":"E4","B2800":"E5","B2899":"E6","B2900":"E7","B2999":"E8","B3000":"E9","B3099":"EA","B3100":"EB","B3199":"EC","B3200":"ED","B3299":"EE","B3300":"EF","B3399":"EG","B3400":"EH","B3499":"EI","B3500":"EJ","B3599":"EK","B3600":"EL","B3699":"EM","B3700":"EN","B3799":"EO","B3800":"EP","B3899":"EQ","B3900":"ER","B3999":"ES","B4000":"ET","B4099":"EU","B4100":"EV","B4199":"EW","B4200":"EX","B4299":"EY","B4300":"EZ","B4399":"F0","B4400":"F1","B4499":"F2","B4500":"F3","B4599":"F4","B4600":"F5","B4699":"F6","B4700":"F7","B4799":"F8","B4800":"F9","B4899":"FA","B4900":"FB","B4999":"FC","B5000":"FD","B5099":"FE","B5100":"FF","B5199":"FG","B5200":"FH","B5299":"FI","B5300":"FJ","B5399":"FK","B5400":"FL","B5499":"FM","B5500":"FN","B5599":"FO","B5600":"FP","B5699":"FQ","B5700":"FR","B5799":"FS","B5800":"FT","B5899":"FU","B5900":"FV","B5999":"FW","B6000":"FX","B6099":"FY","B6100":"FZ","B6199":"G0","B6200":"G1","B6299":"G2","B6300":"G3","B6399":"G4","B6400":"G5","B6499":"G6","B6500":"G7","B6599":"G8","B6600":"G9","B6699":"GA","B6700":"GB","B6799":"GC","B6800":"GD","B6899":"GE","B6900":"GF","B6999":"GG","B7000":"GH","B7099":"GI","B7100":"GJ","B7199":"GK","B7200":"GL","B7299":"GM","B7300":"GN","B7399":"GO","B7400":"GP","B7499":"GQ","B7500":"GR","B7599":"GS","B7600":"GT","B7699":"GU","B7700":"GV","B7799":"GW","B7800":"GX","B7899":"GY","B7900":"GZ","B7999":"H0"};
 const ORIGIN = { lat: 10.0, lng: -83.0 };
-const PARAMS = { RES_PICO: ((0.143/24)/25)/8, ALFA: "23456789ABCDEFGHJKLMNPQRSTVWXZ", MACRO_X_COUNT: 42 };
+const PARAMS = { RES_PICO: ((0.143/24)/25)/8, ALFA: "23456789ABCDEFGHJKLMNPQRSTVWXYZ", MACRO_X_COUNT: 42 };
 
 const mapaSatelite = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20 });
 const map = L.map('map', { zoomControl: false, layers: [mapaSatelite] }).setView([8.98, -79.52], 12);
